@@ -1,7 +1,9 @@
 package com.example.stepquest;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.Button;
 import android.widget.Chronometer;
@@ -9,83 +11,123 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 
 public class TrackingActivity extends AppCompatActivity {
+    private FusedLocationProviderClient fusedLocationClient;
+    private Location previousLocation;
+    private LocationCallback locationCallback;
     TextView activityTitle, distanceText, caloriesText;
     Chronometer chronometer;
     Button stopBtn;
     private double distance = 0.0;
     private int calories = 0;
-    private Handler handler;
-    private Runnable runnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracking);
-
-        // Connect UI
         activityTitle = findViewById(R.id.activityTitle);
         distanceText = findViewById(R.id.distanceText);
         caloriesText = findViewById(R.id.caloriesText);
         chronometer = findViewById(R.id.chronometer);
         stopBtn = findViewById(R.id.stopBtn);
 
-        // Receive activity from Dashboard
-        String activity = getIntent().getStringExtra("activityType");
+        String activity =
+                getIntent().getStringExtra("activityType");
 
-        // Display activity name
         activityTitle.setText(activity);
 
-        // Start timer
-        chronometer.setBase(SystemClock.elapsedRealtime());
+        chronometer.setBase(
+                SystemClock.elapsedRealtime());
+
         chronometer.start();
 
-        // Start distance and calorie updates
-        handler = new Handler();
+        fusedLocationClient =
+                LocationServices
+                        .getFusedLocationProviderClient(this);
 
-        runnable = new Runnable() {
-            @Override
-            public void run() {
-                distance += 0.05;
-                calories += 2;
+        LocationRequest locationRequest =
+                new LocationRequest.Builder(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        3000)
+                        .build();
 
-                distanceText.setText(
-                        "Distance: " +
-                                String.format("%.2f", distance) +
-                                " km");
+        locationCallback =
+                new LocationCallback() {
+                    @Override
+                    public void onLocationResult(
+                            LocationResult locationResult) {
+                        if (locationResult == null) {
+                            return;
+                        }
 
-                caloriesText.setText(
-                        "Calories: " +
-                                calories +
-                                " kcal");
+                        Location currentLocation =
+                                locationResult.getLastLocation();
 
-                handler.postDelayed(this, 1000);
-            }
-        };
+                        if (currentLocation == null) {
+                            return;
+                        }
 
-        handler.post(runnable);
+                        if (previousLocation != null) {
+                            float meters =
+                                    previousLocation.distanceTo(
+                                            currentLocation);
+                            distance += meters / 1000.0;
 
-        // Stop Button
+                            if (activity.equals("Walking")) {
+                                calories = (int) (distance * 50);
+                            } else if (activity.equals("Running")) {
+                                calories = (int) (distance * 70);
+                            } else {
+                                calories = (int) (distance * 30);
+                            }
+                            distanceText.setText("Distance: " + String.format("%.2f", distance) + " km");
+                            caloriesText.setText("Calories: " + calories + " kcal");
+                        }
+                        previousLocation = currentLocation;
+                    }
+                };
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    getMainLooper());
+        }
         stopBtn.setOnClickListener(v -> {
-            // Stop timer
             chronometer.stop();
-            // Stop distance/calorie updates
-            handler.removeCallbacks(runnable);
-            // Show summary
-            AlertDialog.Builder builder =
-                    new AlertDialog.Builder(TrackingActivity.this);
-
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+            AlertDialog.Builder builder = new AlertDialog.Builder(TrackingActivity.this);
             builder.setTitle("Workout Complete");
-            builder.setMessage(
-                    "Activity: " + activity +
-                            "\nDistance: " + String.format("%.2f", distance) + " km" +
-                            "\nCalories: " + calories + " kcal"
-            );
-            builder.setPositiveButton("OK", (dialog, which) -> {
-                // Return to Dashboard
-                finish();
-            });
+            builder.setMessage("Activity: " + activity
+                            + "\nDistance: "
+                            + String.format("%.2f",
+                            distance)
+                            + " km"
+                            + "\nCalories: "
+                            + calories
+                            + " kcal");
+
+            builder.setPositiveButton("OK",
+                    (dialog, which) -> {
+                        Workout workout = new Workout(
+                                        activity,
+                                        distance,
+                                        calories);
+                        WorkoutData.workoutList.add(workout);
+                        finish();
+                    });
             builder.show();
         });
     }
