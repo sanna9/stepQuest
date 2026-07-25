@@ -1,55 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center">
+    android:padding="16dp">
 
-    <!-- Activity Name -->
     <TextView
         android:id="@+id/activityTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Activity"
-        android:textSize="26sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:layout_marginBottom="30dp"/>
+        android:layout_marginBottom="12dp"/>
 
-    <!-- Timer -->
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"/>
+
     <Chronometer
         android:id="@+id/chronometer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="24sp"
-        android:layout_marginBottom="20dp"/>
+        android:textSize="28sp"
+        android:layout_marginTop="16dp"/>
 
-    <!-- Distance -->
     <TextView
         android:id="@+id/distanceText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Distance: 0 km"
+        android:text="Distance: 0.00 km"
         android:textSize="18sp"
-        android:layout_marginBottom="10dp"/>
+        android:layout_marginTop="16dp"/>
 
-    <!-- Calories -->
     <TextView
         android:id="@+id/caloriesText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Calories: 0 kcal"
         android:textSize="18sp"
-        android:layout_marginBottom="30dp"/>
+        android:layout_marginTop="8dp"/>
 
-    <!-- Stop Button -->
     <Button
         android:id="@+id/stopBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Stop"
-        android:backgroundTint="#F44336"
-        android:textColor="#FFFFFF"/>
+        android:text="Stop Activity"
+        android:layout_marginTop="20dp"/>
 
 </LinearLayout>

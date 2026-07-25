@@ -23,7 +23,8 @@ import org.json.JSONObject;
 
 public class DashboardActivity extends AppCompatActivity {
 
-    private static final String API_KEY = "95f2a0f7bf5107eb36816bce167b9d5e";
+    private static final String API_KEY =
+            BuildConfig.WEATHER_API_KEY;
 
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -142,6 +143,13 @@ public class DashboardActivity extends AppCompatActivity {
 
         // Logout
         logoutBtn.setOnClickListener(v -> {
+
+            getSharedPreferences(
+                    "StepQuestUsers",
+                    MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("loggedIn", false)
+                    .apply();
 
             Intent intent =
                     new Intent(
